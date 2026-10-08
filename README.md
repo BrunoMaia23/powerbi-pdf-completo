@@ -8,7 +8,7 @@ valores por item, em que o extrato dos clientes maiores tinha muito mais linhas 
 matriz. Este repositório mostra as duas saídas que montei para isso, refeitas sobre um modelo fictício
 de extrato de comissões.
 
-*In English: getting a complete PDF out of a Power BI report whose matrix hides rows behind a scrollbar.
+*(EN) Getting a complete PDF out of a Power BI report whose matrix hides rows behind a scrollbar.
 DAX measures for a print-friendly page with an overflow warning, a paginated report (RDL) opened with the
 current filters through a DAX-built URL, and a Python check that compares an exported PDF with the expected
 query result. Synthetic data.*
@@ -69,7 +69,7 @@ A leitura não depende da ordem do texto. Nas tabelas lado a lado, a extração 
 as colunas numa mesma linha, então o validador procura cada ocorrência de "código, descrição, valor"
 onde ela estiver.
 
-## Rodando
+## Na linha de comando
 
 ```bash
 python -m venv .venv && source .venv/bin/activate    # Windows: .venv\Scripts\activate
