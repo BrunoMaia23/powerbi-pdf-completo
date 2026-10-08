@@ -1,0 +1,28 @@
+// URL do botão "PDF completo": abre o relatório paginado com os filtros atuais e já exporta em PDF.
+// No botão: Ação > Tipo "URL da Web" > fx > campo [URL do PDF completo].
+//
+// Os filtros vão por ID (número dispensa escape, e o DAX não tem URL-encode). Sem filtro de
+// vendedor vai o valor TODOS, que a consulta do paginado entende como "sem filtro"; mandar a lista
+// inteira de IDs estouraria o tamanho da URL. Mesma lógica de src/pdfcompleto/url.py.
+
+URL do PDF completo =
+VAR base = "https://app.powerbi.com/groups/me/rdlreports/ID-DO-RELATORIO-PAGINADO"
+VAR ano = SELECTEDVALUE ( fato_comissao[ano] )
+VAR vendedores =
+    IF (
+        ISFILTERED ( dim_vendedor ),
+        CONCATENATEX (
+            VALUES ( dim_vendedor[vendedor_id] ),
+            "&rp:Vendedores=" & dim_vendedor[vendedor_id],
+            "",
+            dim_vendedor[vendedor_id], ASC
+        ),
+        "&rp:Vendedores=TODOS"
+    )
+RETURN
+    base & "?rdl:format=PDF"
+        & IF ( NOT ISBLANK ( ano ), "&rp:Ano=" & ano )
+        & vendedores
+
+URL cabe no navegador =
+IF ( LEN ( [URL do PDF completo] ) <= 1800, 1, 0 )

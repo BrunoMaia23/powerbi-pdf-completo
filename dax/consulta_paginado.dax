@@ -1,0 +1,26 @@
+// Consulta do relatório paginado (a mesma do rdl/extrato_completo.rdl). Os parâmetros chegam assim:
+//   @Ano        inteiro ou vazio (vazio = todos os anos)
+//   @Vendedores IDs separados por "|" (Join no RDL) ou TODOS
+// Para gerar o CSV esperado da validação, rode no DAX Studio trocando os parâmetros por valores.
+
+DEFINE
+    VAR filtroAno =
+        FILTER ( ALL ( fato_comissao[ano] ), ISBLANK ( @Ano ) || fato_comissao[ano] = @Ano )
+    VAR filtroVendedor =
+        FILTER (
+            ALL ( dim_vendedor[vendedor_id] ),
+            @Vendedores = "TODOS" || PATHCONTAINS ( @Vendedores, dim_vendedor[vendedor_id] )
+        )
+
+EVALUATE
+SUMMARIZECOLUMNS (
+    dim_item[ordem_grupo],
+    dim_item[grupo],
+    dim_item[chave_ordem],
+    dim_item[codigo],
+    dim_item[descricao],
+    filtroAno,
+    filtroVendedor,
+    "Valor", [Total Comissão]
+)
+ORDER BY dim_item[chave_ordem]

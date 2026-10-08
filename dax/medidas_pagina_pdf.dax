@@ -1,0 +1,56 @@
+// Medidas da página "Extrato (PDF)", na pasta "Página PDF" da tabela _Medidas.
+//
+// Modelo: fato_comissao[ano, vendedor_id, codigo, valor]
+//         dim_item[codigo, descricao, grupo, ordem_grupo, chave_ordem]
+//         dim_vendedor[vendedor_id, nome, regional]
+// chave_ordem é a ordem do extrato (grupo, depois código) numa coluna só, o que simplifica a posição.
+//
+// A página tem N tabelas lado a lado. Cada uma recebe o filtro visual [Tabela no PDF] = k e mostra
+// um bloco contínuo do extrato. A altura da página é fixa, então existe um limite de linhas:
+// passou dele, o card com [Aviso do PDF] aparece em vez de esconder linhas sem avisar ninguém.
+
+Total Comissão =
+SUM ( fato_comissao[valor] )
+
+Tabelas na Página = 4
+
+Linhas por Tabela = 300
+
+Itens no Filtro =
+COUNTROWS (
+    FILTER ( ALLSELECTED ( dim_item[chave_ordem] ), NOT ISBLANK ( [Total Comissão] ) )
+)
+
+Linha no PDF =
+VAR atual = SELECTEDVALUE ( dim_item[chave_ordem] )
+RETURN
+    IF (
+        NOT ISBLANK ( atual ) && NOT ISBLANK ( [Total Comissão] ),
+        COUNTROWS (
+            FILTER (
+                ALLSELECTED ( dim_item[chave_ordem] ),
+                dim_item[chave_ordem] <= atual
+                    && NOT ISBLANK ( [Total Comissão] )
+            )
+        )
+    )
+
+Tabela no PDF =
+VAR linha = [Linha no PDF]
+VAR porTabela =
+    MAX ( 1, ROUNDUP ( DIVIDE ( [Itens no Filtro], [Tabelas na Página] ), 0 ) )
+RETURN
+    IF ( NOT ISBLANK ( linha ), MIN ( [Tabelas na Página], ROUNDUP ( DIVIDE ( linha, porTabela ), 0 ) ) )
+
+Resumo do PDF =
+FORMAT ( [Itens no Filtro], "#,0" ) & " itens, total de "
+    & FORMAT ( CALCULATE ( [Total Comissão], ALLSELECTED ( dim_item ) ), "#,0.00" )
+
+Aviso do PDF =
+VAR capacidade = [Tabelas na Página] * [Linhas por Tabela]
+RETURN
+    IF (
+        [Itens no Filtro] > capacidade,
+        "O filtro tem " & FORMAT ( [Itens no Filtro], "#,0" ) & " itens e a página mostra no máximo "
+            & FORMAT ( capacidade, "#,0" ) & ". Use o PDF completo."
+    )
